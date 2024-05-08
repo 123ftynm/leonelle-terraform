@@ -1,3 +1,4 @@
+
 variable "ami_id" {
   type    = string
   default = "ami-0a4f913c1801e18a2"
@@ -12,12 +13,26 @@ variable "region_name" {
 }
 variable "vpc_cidr" {
   type    = string
-  default = "10.0.0.0/16"
+  default = "10.10.0.0/16"
 }
 
 variable "subnet_cidr" {
   type    = string
-  default = "10.0.0.0/20"
+  default = "10.10.5.0/24"
+}
+
+variable "subnet2_cidr" {
+  type    = string
+  default = "10.10.2.0/24"
+}
+variable "subnet3_cidr" {
+  type    = string
+  default = "10.10.3.0/24"
+}
+
+variable "subnet1_cidr" {
+  type    = string
+  default = "10.10.4.0/24"
 }
 
 variable "az1" {
@@ -37,6 +52,10 @@ variable "sg_id" {
   type    = string
   default = "sg-05361575d086dc6d5"
 }
+
+
+
+
 
 
 
