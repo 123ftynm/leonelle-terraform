@@ -13,29 +13,6 @@ provider "aws" {
   region = var.region_name
 }
 
-resource "aws_iam_role" "my_role" {
-  name = "my_role"
-
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  tags = {
-    tag-key = "iam ec2 role"
-  }
-}
 
 resource "aws_vpc" "cstomVPC" {
   cidr_block = var.vpc_cidr
@@ -80,7 +57,7 @@ resource "aws_route_table_association" "public_subnet_association1" {
 
 resource "aws_subnet" "custom_public_subnet2" {
   vpc_id                  = aws_vpc.cstomVPC.id
-  cidr_block              = var.subnet_cidr
+  cidr_block              = var.subnet1_cidr
   map_public_ip_on_launch = true
   availability_zone       = var.az2
 
@@ -179,8 +156,33 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic1_ipv4" {
 
 }
 
+resource "aws_iam_role" "leo_role" {
+  name = "leo_role"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    tag-key = "leo ec2 role"
+  }
+}
+
+
 resource "aws_s3_bucket" "sbucket" {
-  bucket = "s3buke"
+  bucket = "leosbuke"
 }
 
 resource "aws_s3_bucket_ownership_controls" "sbucket" {
@@ -197,13 +199,7 @@ resource "aws_s3_bucket_acl" "s3bucket" {
   acl    = "private"
 }
 
-resource "aws_lb_target_group" "alb-tg" {
-  name        = "tf-lb-alb-tg"
-  target_type = "alb"
-  port        = 80
-  protocol    = "TCP"
-  vpc_id      = aws_vpc.cstomVPC.id
-}
+
 
 resource "aws_lb" "web_alb" {
   name               = "leoapp-lb-tf"
@@ -219,7 +215,7 @@ resource "aws_lb" "web_alb" {
 
 resource "aws_subnet" "custom_private_subnet1" {
   vpc_id                  = aws_vpc.cstomVPC.id
-  cidr_block              = var.subnet_cidr
+  cidr_block              = var.subnet2_cidr
   map_public_ip_on_launch = true
   availability_zone       = var.az1
 
@@ -234,7 +230,7 @@ resource "aws_route_table_association" "private_subnet_association1" {
 
 resource "aws_subnet" "custom_private_subnet2" {
   vpc_id                  = aws_vpc.cstomVPC.id
-  cidr_block              = var.subnet_cidr
+  cidr_block              = var.subnet3_cidr
   map_public_ip_on_launch = true
   availability_zone       = var.az2
 
@@ -290,16 +286,14 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic2_ipv4" {
 
 
 
-resource "aws_db_instance" "leonelledb" {
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t2.micro"
-  db_name              = "db_leonelle"
-  username             = "myuser"
+resource "aws_db_instance" "myinstance" {
+  engine           = "mysql"
+  identifier       = "myrdsinstance"
+  allocated_storage = 20
+  engine_version   = "5.7"
+  instance_class   = "db.t3.micro"
+   username             = "myuser"
   password             = "mypassword"
-  db_subnet_group_name = aws_db_subnet_group.rds_group.name
 
 }
 
@@ -328,7 +322,7 @@ resource "aws_autoscaling_group" "autoScaling" {
 
 resource "aws_iam_role_policy" "s3_full_access" {
   name = "s3fullaccess"
-  role = aws_iam_role.my_role.name
+  role = aws_iam_role.leo_role.name
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -352,10 +346,6 @@ resource "aws_launch_configuration" "as_conf" {
 }
 
 
-resource "aws_placement_group" "test" {
-  name     = "test"
-  strategy = "cluster"
-}
 
 resource "aws_autoscaling_group" "bar" {
   name                      = "terraform-asg-example"
@@ -366,11 +356,31 @@ resource "aws_autoscaling_group" "bar" {
   health_check_type         = "ELB"
   desired_capacity          = 4
   force_delete              = true
-  placement_group           = aws_placement_group.test.id
-  vpc_zone_identifier       = [aws_subnet.custom_public_subnet1.id, aws_subnet.custom_public_subnet2.id]
+
+  vpc_zone_identifier = [aws_subnet.custom_public_subnet1.id, aws_subnet.custom_public_subnet2.id]
 
   lifecycle {
     create_before_destroy = true
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
